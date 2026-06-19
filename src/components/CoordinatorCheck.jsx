@@ -9,12 +9,13 @@ export default function CoordinatorCheck({ dateKey, entry, onCheck, onClose }) {
   }, [dateKey, entry])
 
   const hasContent = Boolean(entry?.content)
+  const questions = Array.isArray(entry?.checkQuestions) ? entry.checkQuestions : []
 
   const handleToggle = async () => {
     setSaving(true)
     await onCheck(dateKey, !entry?.checked, comment)
     setSaving(false)
-    if (!entry?.checked) onClose() // 확인 시 캘린더로 복귀
+    if (!entry?.checked) onClose()
   }
 
   const handleSaveComment = async () => {
@@ -39,8 +40,23 @@ export default function CoordinatorCheck({ dateKey, entry, onCheck, onClose }) {
           <ReadField label="묵상한 내용" value={entry.content} />
           <ReadField label="적용 / 실천" value={entry.application} />
           <ReadField label="기도제목" value={entry.prayer} />
-          {entry.checkQuestion && (
-            <ReadField label="점검 질문" value={entry.checkQuestion} highlight />
+
+          {questions.length > 0 && (
+            <div className="mb-5">
+              <p className="text-xs text-lamp mb-2">점검 질문</p>
+              <div className="flex flex-col gap-3">
+                {questions.map((q, idx) => (
+                  <div key={q.id ?? idx} className="border border-lamp/30 rounded-xl p-3 bg-lamp/5">
+                    {q.question && (
+                      <p className="text-lamp text-sm font-semibold mb-1">{q.question}</p>
+                    )}
+                    <p className="text-paper text-sm leading-relaxed whitespace-pre-wrap">
+                      {q.answer || '-'}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
 
           <div className="mb-5">
@@ -73,10 +89,10 @@ export default function CoordinatorCheck({ dateKey, entry, onCheck, onClose }) {
   )
 }
 
-function ReadField({ label, value, highlight }) {
+function ReadField({ label, value }) {
   return (
-    <div className={`mb-5 ${highlight ? 'border border-lamp/30 rounded-xl p-3 bg-lamp/5' : ''}`}>
-      <p className={`text-xs mb-1 ${highlight ? 'text-lamp' : 'text-lampSoft'}`}>{label}</p>
+    <div className="mb-5">
+      <p className="text-xs text-lampSoft mb-1">{label}</p>
       <p className="text-paper text-sm leading-relaxed whitespace-pre-wrap">{value || '-'}</p>
     </div>
   )

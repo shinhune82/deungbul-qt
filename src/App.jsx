@@ -61,7 +61,7 @@ export default function App() {
   return (
     <div className="min-h-screen pb-24">
       <div className="px-5 pt-6 flex items-center justify-between">
-        <p className="font-display text-lampSoft text-sm tracking-widest">DEUNGBUL</p>
+        <<p className="font-display text-lampSoft text-sm tracking-widest">더플랜 · THE PLAN</p>
         <span className="text-xs text-faint">{role === 'writer' ? '작성자' : '코디네이터'}</span>
       </div>
 

@@ -1,0 +1,17 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /qt_entries/{date} {
+      allow read, write: if request.auth != null;
+    }
+
+    match /settings/{role} {
+      allow read, write: if request.auth != null;
+    }
+
+    match /fcm_tokens/{role} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

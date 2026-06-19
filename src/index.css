@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background-color: theme('colors.night');
+  color: theme('colors.paper');
+  font-family: theme('fontFamily.body');
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-display {
+  font-family: theme('fontFamily.display');
+}
+
+.lamp-dot {
+  position: relative;
+  width: 80%;
+  max-width: 36px;
+  aspect-ratio: 1 / 1;
+  border-radius: 9999px;
+  border: 1.5px solid theme('colors.faint');
+  background: transparent;
+  transition: all 0.4s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0;
+  line-height: 1;
+}
+
+.lamp-dot.is-written {
+  border-color: theme('colors.lamp');
+  background: radial-gradient(circle, #fff5c0 0%, theme('colors.lamp') 60%, theme('colors.lampSoft') 100%);
+  box-shadow: 0 0 10px 2px rgba(232, 163, 61, 0.5);
+}
+
+.lamp-dot.is-checked {
+  border-color: theme('colors.lamp');
+  background: radial-gradient(circle, #fff5c0 0%, theme('colors.lamp') 60%, theme('colors.lampSoft') 100%);
+  box-shadow: 0 0 10px 2px rgba(232, 163, 61, 0.5);
+  font-size: 18px;
+}
+
+/* 달토끼 실루엣 - 검은색으로 */
+.rabbit-icon {
+  display: inline-block;
+  filter: brightness(0) saturate(100%);
+  line-height: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lamp-dot.is-written,
+  .lamp-dot.is-checked {
+    animation: lampFlicker 3s ease-in-out infinite;
+  }
+}
+
+@keyframes lampFlicker {
+  0%, 100% { box-shadow: 0 0 10px 2px rgba(232, 163, 61, 0.5); }
+  50% { box-shadow: 0 0 14px 5px rgba(232, 163, 61, 0.7); }
+}

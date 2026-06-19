@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-export default function WriteEntry({ dateKey, entry, onSave, onClose }) {
+export default function WriteEntry({ dateKey, entry, onSave, onDelete, onClose }) {
   const [mode, setMode] = useState('view') // 'view' | 'edit'
   const [passage, setPassage] = useState('')
   const [content, setContent] = useState('')
@@ -8,12 +8,13 @@ export default function WriteEntry({ dateKey, entry, onSave, onClose }) {
   const [prayer, setPrayer] = useState('')
   const [checkQuestion, setCheckQuestion] = useState('')
   const [saving, setSaving] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const hasContent = Boolean(entry?.content)
 
   useEffect(() => {
-    // 미작성이면 바로 편집 모드
     setMode(hasContent ? 'view' : 'edit')
+    setConfirmDelete(false)
     setPassage(entry?.passage ?? '')
     setContent(entry?.content ?? '')
     setApplication(entry?.application ?? '')
@@ -29,6 +30,17 @@ export default function WriteEntry({ dateKey, entry, onSave, onClose }) {
     onClose()
   }
 
+  const handleDelete = async () => {
+    if (!confirmDelete) {
+      setConfirmDelete(true)
+      return
+    }
+    setSaving(true)
+    await onDelete(dateKey)
+    setSaving(false)
+    onClose()
+  }
+
   const hasFeedback = entry?.checked || entry?.comment
 
   return (
@@ -40,7 +52,6 @@ export default function WriteEntry({ dateKey, entry, onSave, onClose }) {
       </div>
 
       {mode === 'view' ? (
-        /* ── 읽기 화면 ── */
         <>
           <ReadField label="오늘의 본문" value={entry?.passage} />
           <ReadField label="묵상한 내용" value={entry?.content} />
@@ -63,13 +74,40 @@ export default function WriteEntry({ dateKey, entry, onSave, onClose }) {
 
           <button
             onClick={() => setMode('edit')}
-            className="w-full border border-lamp text-lamp font-semibold py-4 rounded-2xl"
+            className="w-full border border-lamp text-lamp font-semibold py-4 rounded-2xl mb-3"
           >
             수정하기
           </button>
+
+          {!confirmDelete ? (
+            <button
+              onClick={handleDelete}
+              className="w-full text-faint text-sm py-2"
+            >
+              이 날짜 기록 삭제
+            </button>
+          ) : (
+            <div className="border border-red-400/40 rounded-xl p-4 text-center">
+              <p className="text-sm text-paper mb-3">정말 삭제할까요? 되돌릴 수 없어요.</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  className="flex-1 border border-faint text-faint py-2 rounded-xl text-sm"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={saving}
+                  className="flex-1 bg-red-400/80 text-nightDeep py-2 rounded-xl text-sm font-semibold disabled:opacity-60"
+                >
+                  {saving ? '삭제 중...' : '삭제하기'}
+                </button>
+              </div>
+            </div>
+          )}
         </>
       ) : (
-        /* ── 편집 화면 ── */
         <>
           <Field label="오늘의 본문">
             <input

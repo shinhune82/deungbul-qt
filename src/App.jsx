@@ -37,43 +37,71 @@ export default function App() {
 
   if (!role) return <RoleGate onSelect={handleSelectRole} />
   if (!installDone) return <InstallGuide onDone={handleInstallDone} />
-  if (!authed) return <div className="min-h-screen flex items-center justify-center text-faint"><p>연결 중...</p></div>
-
-  if (selectedDate) {
-    const entry = entries[selectedDate]
-    return role === 'writer' ? (
-      <WriteEntry
-        dateKey={selectedDate}
-        entry={entry}
-        onSave={saveEntry}
-        onClose={() => setSelectedDate(null)}
-      />
-    ) : (
-      <CoordinatorCheck
-        dateKey={selectedDate}
-        entry={entry}
-        onCheck={setCheck}
-        onClose={() => setSelectedDate(null)}
-      />
-    )
-  }
+  if (!authed) return (
+    <div className="min-h-screen flex items-center justify-center text-faint">
+      <p>연결 중...</p>
+    </div>
+  )
 
   return (
     <div className="min-h-screen pb-24">
+      {/* 헤더 */}
       <div className="px-5 pt-6 flex items-center justify-between">
         <p className="font-display text-lampSoft text-sm tracking-widest">THE PLAN</p>
         <span className="text-xs text-faint">{role === 'writer' ? '작성자' : '코디네이터'}</span>
       </div>
 
-      {tab === 'calendar' && <CalendarView entries={entries} onSelectDate={setSelectedDate} />}
-      {tab === 'stats' && <StreakStats entries={entries} />}
-      {tab === 'settings' && <NotificationSettings role={role} />}
+      {/* 메인 콘텐츠 */}
+      {selectedDate ? (
+        role === 'writer' ? (
+          <WriteEntry
+            dateKey={selectedDate}
+            entry={entries[selectedDate]}
+            onSave={saveEntry}
+            onClose={() => setSelectedDate(null)}
+          />
+        ) : (
+          <CoordinatorCheck
+            dateKey={selectedDate}
+            entry={entries[selectedDate]}
+            onCheck={setCheck}
+            onClose={() => setSelectedDate(null)}
+          />
+        )
+      ) : (
+        <>
+          {tab === 'calendar' && <CalendarView entries={entries} onSelectDate={setSelectedDate} />}
+          {tab === 'stats' && <StreakStats entries={entries} />}
+          {tab === 'settings' && <NotificationSettings role={role} />}
+        </>
+      )}
 
+      {/* 하단 탭바 - 항상 표시 */}
       <div className="fixed bottom-0 left-0 right-0 bg-nightDeep border-t border-faint/20 flex">
-        <button onClick={() => setTab('calendar')} className={`flex-1 py-4 text-sm ${tab === 'calendar' ? 'text-lamp' : 'text-faint'}`}>캘린더</button>
-        <button onClick={() => setSelectedDate(todayKey())} className="flex-1 py-4 text-sm text-faint">오늘</button>
-        <button onClick={() => setTab('stats')} className={`flex-1 py-4 text-sm ${tab === 'stats' ? 'text-lamp' : 'text-faint'}`}>등불</button>
-        <button onClick={() => setTab('settings')} className={`flex-1 py-4 text-sm ${tab === 'settings' ? 'text-lamp' : 'text-faint'}`}>설정</button>
+        <button
+          onClick={() => { setSelectedDate(null); setTab('calendar') }}
+          className={`flex-1 py-4 text-sm ${tab === 'calendar' && !selectedDate ? 'text-lamp' : 'text-faint'}`}
+        >
+          캘린더
+        </button>
+        <button
+          onClick={() => setSelectedDate(todayKey())}
+          className={`flex-1 py-4 text-sm ${selectedDate === todayKey() ? 'text-lamp' : 'text-faint'}`}
+        >
+          오늘
+        </button>
+        <button
+          onClick={() => { setSelectedDate(null); setTab('stats') }}
+          className={`flex-1 py-4 text-sm ${tab === 'stats' && !selectedDate ? 'text-lamp' : 'text-faint'}`}
+        >
+          등불
+        </button>
+        <button
+          onClick={() => { setSelectedDate(null); setTab('settings') }}
+          className={`flex-1 py-4 text-sm ${tab === 'settings' && !selectedDate ? 'text-lamp' : 'text-faint'}`}
+        >
+          설정
+        </button>
       </div>
     </div>
   )

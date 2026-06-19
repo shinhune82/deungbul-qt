@@ -19,7 +19,7 @@ export default function App() {
   const [selectedDate, setSelectedDate] = useState(null)
   const [authed, setAuthed] = useState(false)
 
-  const { entries, saveEntry, setCheck } = useEntries()
+  const { entries, saveEntry, setCheck, deleteEntry } = useEntries()
 
   useEffect(() => {
     ensureSignedIn(() => setAuthed(true))
@@ -58,6 +58,7 @@ export default function App() {
             dateKey={selectedDate}
             entry={entries[selectedDate]}
             onSave={saveEntry}
+            onDelete={deleteEntry}
             onClose={() => setSelectedDate(null)}
           />
         ) : (

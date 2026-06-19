@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/icon-192.png', 'icons/icon-512.png'],
       manifest: {
-        name: '등불 - 말씀 QT 노트',
-        short_name: '등불',
+        name: '더플랜 - 말씀 QT 노트',
+        short_name: '더플랜',
         description: '매일 말씀 묵상과 코디네이터 피드백',
         theme_color: '#1B2240',
         background_color: '#1B2240',

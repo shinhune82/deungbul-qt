@@ -40,7 +40,16 @@ export default function CalendarView({ entries, onSelectDate }) {
           if (d === null) return <div key={`empty-${idx}`} />
           const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
           const entry = entries[key]
-          const isWritten = Boolean(entry?.content)
+          const hasCheckAnswers = Array.isArray(entry?.checkQuestions)
+            ? entry.checkQuestions.some((q) => q.question?.trim() || q.answer?.trim())
+            : false
+          const isWritten = Boolean(
+            entry?.passage?.trim() ||
+            entry?.content?.trim() ||
+            entry?.application?.trim() ||
+            entry?.prayer?.trim() ||
+            hasCheckAnswers
+          )
           const isChecked = Boolean(entry?.checked)
           const isToday = key === todayStr
 

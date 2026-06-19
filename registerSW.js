@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/deungbul-qt/sw.js', { scope: '/deungbul-qt/' })})}

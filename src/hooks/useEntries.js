@@ -6,6 +6,7 @@ import {
   orderBy,
   query,
   setDoc,
+  deleteDoc,
   serverTimestamp
 } from 'firebase/firestore'
 import { db } from '../firebase'
@@ -70,5 +71,10 @@ export function useEntries() {
     )
   }, [])
 
-  return { entries, loading, saveEntry, setCheck }
+  const deleteEntry = useCallback(async (dateKey) => {
+    const ref = doc(db, COLLECTION, dateKey)
+    await deleteDoc(ref)
+  }, [])
+
+  return { entries, loading, saveEntry, setCheck, deleteEntry }
 }

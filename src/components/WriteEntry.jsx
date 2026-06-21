@@ -1,34 +1,72 @@
 import { useEffect, useState } from 'react'
+import { getDailyPassage } from '../content/unit1'
 
 function makeId() {
   return Math.random().toString(36).slice(2, 9)
 }
 
 export default function WriteEntry({ dateKey, entry, onSave, onDelete, onClose }) {
-  const [mode, setMode] = useState('view') // 'view' | 'edit'
-  const [passage, setPassage] = useState('')
-  const [content, setContent] = useState('')
+  const passage = getDailyPassage(dateKey)
+  const [mode, setMode] = useState('view')
+  const [showFullBody, setShowFullBody] = useState(false)
+
   const [application, setApplication] = useState('')
   const [prayer, setPrayer] = useState('')
+  const [passageQA, setPassageQA] = useState([])
+  const [groupQA, setGroupQA] = useState([])
   const [checkQuestions, setCheckQuestions] = useState([])
+
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
-  const hasContent = Boolean(entry?.content)
+  const hasCheckAnswersInit = Array.isArray(entry?.checkQuestions)
+    ? entry.checkQuestions.some((q) => q.question?.trim() || q.answer?.trim())
+    : false
+  const hasPassageQA = Array.isArray(entry?.passageQA)
+    ? entry.passageQA.some((q) => q.answer?.trim())
+    : false
+  const hasGroupQA = Array.isArray(entry?.groupQA)
+    ? entry.groupQA.some((q) => q.answer?.trim())
+    : false
+  const hasContent = Boolean(
+    entry?.application?.trim() ||
+    entry?.prayer?.trim() ||
+    hasCheckAnswersInit ||
+    hasPassageQA ||
+    hasGroupQA
+  )
 
   useEffect(() => {
     setMode(hasContent ? 'view' : 'edit')
     setConfirmDelete(false)
-    setPassage(entry?.passage ?? '')
-    setContent(entry?.content ?? '')
+    setShowFullBody(false)
     setApplication(entry?.application ?? '')
     setPrayer(entry?.prayer ?? '')
 
-    // 기존 데이터 호환: checkQuestion(문자열) -> checkQuestions(배열)로 변환
+    if (passage) {
+      const saved = Array.isArray(entry?.passageQA) ? entry.passageQA : []
+      setPassageQA(
+        passage.reflectionQuestions.map((q, idx) => ({
+          id: saved[idx]?.id ?? makeId(),
+          question: q,
+          answer: saved[idx]?.answer ?? ''
+        }))
+      )
+      const savedGroup = Array.isArray(entry?.groupQA) ? entry.groupQA : []
+      setGroupQA(
+        passage.groupQuestions.map((q, idx) => ({
+          id: savedGroup[idx]?.id ?? makeId(),
+          question: q,
+          answer: savedGroup[idx]?.answer ?? ''
+        }))
+      )
+    } else {
+      setPassageQA([])
+      setGroupQA([])
+    }
+
     if (Array.isArray(entry?.checkQuestions) && entry.checkQuestions.length > 0) {
       setCheckQuestions(entry.checkQuestions)
-    } else if (entry?.checkQuestion) {
-      setCheckQuestions([{ id: makeId(), question: '', answer: entry.checkQuestion }])
     } else {
       setCheckQuestions([{ id: makeId(), question: '', answer: '' }])
     }
@@ -37,21 +75,26 @@ export default function WriteEntry({ dateKey, entry, onSave, onDelete, onClose }
   const addQuestion = () => {
     setCheckQuestions((prev) => [...prev, { id: makeId(), question: '', answer: '' }])
   }
-
   const removeQuestion = (id) => {
     setCheckQuestions((prev) => (prev.length > 1 ? prev.filter((q) => q.id !== id) : prev))
   }
-
-  const updateQuestion = (id, field, value) => {
-    setCheckQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, [field]: value } : q)))
+  const updateQuestion = (list, setList, id, field, value) => {
+    setList((prev) => prev.map((q) => (q.id === id ? { ...q, [field]: value } : q)))
   }
 
   const handleSave = async () => {
     if (saving) return
     setSaving(true)
-    // 빈 항목은 제거하고 저장
-    const cleaned = checkQuestions.filter((q) => q.question.trim() || q.answer.trim())
-    await onSave(dateKey, { passage, content, application, prayer, checkQuestions: cleaned })
+    const cleanedChecks = checkQuestions.filter((q) => q.question.trim() || q.answer.trim())
+    await onSave(dateKey, {
+      passage: passage?.title ?? '',
+      content: passage ? `${passage.unitTitle} - ${passage.title}` : '',
+      application,
+      prayer,
+      passageQA,
+      groupQA,
+      checkQuestions: cleanedChecks
+    })
     setSaving(false)
     onClose()
   }
@@ -68,7 +111,9 @@ export default function WriteEntry({ dateKey, entry, onSave, onDelete, onClose }
   }
 
   const hasFeedback = entry?.checked || entry?.comment
-  const viewQuestions = Array.isArray(entry?.checkQuestions) ? entry.checkQuestions : []
+  const viewPassageQA = Array.isArray(entry?.passageQA) ? entry.passageQA : []
+  const viewGroupQA = Array.isArray(entry?.groupQA) ? entry.groupQA : []
+  const viewChecks = Array.isArray(entry?.checkQuestions) ? entry.checkQuestions : []
 
   return (
     <div className="px-5 pb-10">
@@ -78,29 +123,45 @@ export default function WriteEntry({ dateKey, entry, onSave, onDelete, onClose }
         <div className="w-10" />
       </div>
 
+      {passage ? (
+        <div className="mb-6 border border-lamp/30 rounded-xl p-4 bg-lamp/5">
+          <p className="text-xs text-lampSoft mb-1">{passage.unitTitle}</p>
+          <p className="font-display text-base text-lamp mb-3">{passage.title}</p>
+          <p
+            className={`text-paper text-sm leading-relaxed whitespace-pre-wrap ${
+              showFullBody ? '' : 'line-clamp-6'
+            }`}
+          >
+            {passage.body}
+          </p>
+          <button
+            onClick={() => setShowFullBody((v) => !v)}
+            className="text-xs text-lamp underline mt-2"
+          >
+            {showFullBody ? '본문 접기' : '본문 전체 보기'}
+          </button>
+        </div>
+      ) : (
+        <div className="mb-6 border border-faint/30 rounded-xl p-4 text-center text-faint text-sm">
+          이 날짜에는 등록된 본문이 없어요 (주말이거나 단원 범위 밖)
+        </div>
+      )}
+
       {mode === 'view' ? (
         <>
-          <ReadField label="오늘의 본문" value={entry?.passage} />
-          <ReadField label="묵상한 내용" value={entry?.content} />
+          {viewPassageQA.length > 0 && (
+            <QASection label="묵상 질문" items={viewPassageQA} />
+          )}
+
           <ReadField label="적용 / 실천" value={entry?.application} />
           <ReadField label="기도제목" value={entry?.prayer} />
 
-          {viewQuestions.length > 0 && (
-            <div className="mb-5">
-              <p className="text-xs text-lampSoft mb-2">점검 질문</p>
-              <div className="flex flex-col gap-3">
-                {viewQuestions.map((q, idx) => (
-                  <div key={q.id ?? idx} className="border border-faint/30 rounded-xl p-3">
-                    {q.question && (
-                      <p className="text-paper text-sm font-semibold mb-1">{q.question}</p>
-                    )}
-                    <p className="text-paper text-sm leading-relaxed whitespace-pre-wrap">
-                      {q.answer || '-'}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
+          {viewGroupQA.length > 0 && (
+            <QASection label="코디네이터(소그룹)와 나눔" items={viewGroupQA} accent="sage" />
+          )}
+
+          {viewChecks.length > 0 && viewChecks.some((q) => q.question || q.answer) && (
+            <QASection label="추가 점검 질문" items={viewChecks} />
           )}
 
           {hasFeedback && (
@@ -148,24 +209,27 @@ export default function WriteEntry({ dateKey, entry, onSave, onDelete, onClose }
         </>
       ) : (
         <>
-          <Field label="오늘의 본문">
-            <input
-              value={passage}
-              onChange={(e) => setPassage(e.target.value)}
-              placeholder="예) 시편 23편 1-6절"
-              className="w-full bg-transparent border-b border-faint pb-2 text-paper placeholder:text-faint/60 focus:outline-none focus:border-lamp"
-            />
-          </Field>
-
-          <Field label="묵상한 내용">
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              rows={6}
-              placeholder="말씀을 통해 느낀 것을 적어주세요"
-              className="w-full bg-night/40 border border-faint/40 rounded-xl p-3 text-paper placeholder:text-faint/60 focus:outline-none focus:border-lamp resize-none"
-            />
-          </Field>
+          {passageQA.length > 0 && (
+            <div className="mb-5">
+              <p className="text-xs text-lampSoft mb-2">묵상 질문</p>
+              <div className="flex flex-col gap-3">
+                {passageQA.map((q) => (
+                  <div key={q.id} className="border border-faint/40 rounded-xl p-3">
+                    <p className="text-paper text-sm font-semibold mb-2">{q.question}</p>
+                    <textarea
+                      value={q.answer}
+                      onChange={(e) =>
+                        updateQuestion(passageQA, setPassageQA, q.id, 'answer', e.target.value)
+                      }
+                      rows={3}
+                      placeholder="답변을 적어주세요"
+                      className="w-full bg-night/40 border border-faint/40 rounded-xl p-3 text-paper text-sm placeholder:text-faint/60 focus:outline-none focus:border-lamp resize-none"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <Field label="적용 / 실천">
             <textarea
@@ -187,10 +251,31 @@ export default function WriteEntry({ dateKey, entry, onSave, onDelete, onClose }
             />
           </Field>
 
-          {/* 점검 질문 - 동적 추가/삭제 */}
+          {groupQA.length > 0 && (
+            <div className="mb-5">
+              <p className="text-xs text-sage mb-2">코디네이터(소그룹)와 나눔</p>
+              <div className="flex flex-col gap-3">
+                {groupQA.map((q) => (
+                  <div key={q.id} className="border border-sage/40 rounded-xl p-3 bg-sage/5">
+                    <p className="text-paper text-sm font-semibold mb-2">{q.question}</p>
+                    <textarea
+                      value={q.answer}
+                      onChange={(e) =>
+                        updateQuestion(groupQA, setGroupQA, q.id, 'answer', e.target.value)
+                      }
+                      rows={3}
+                      placeholder="답변을 적어주세요"
+                      className="w-full bg-night/40 border border-faint/40 rounded-xl p-3 text-paper text-sm placeholder:text-faint/60 focus:outline-none focus:border-sage resize-none"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="mb-5">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs text-lampSoft">점검 질문</p>
+              <p className="text-xs text-lampSoft">추가 점검 질문 (선택)</p>
               <button
                 onClick={addQuestion}
                 type="button"
@@ -199,7 +284,6 @@ export default function WriteEntry({ dateKey, entry, onSave, onDelete, onClose }
                 + 질문 추가
               </button>
             </div>
-
             <div className="flex flex-col gap-3">
               {checkQuestions.map((q, idx) => (
                 <div key={q.id} className="border border-faint/40 rounded-xl p-3">
@@ -217,13 +301,17 @@ export default function WriteEntry({ dateKey, entry, onSave, onDelete, onClose }
                   </div>
                   <input
                     value={q.question}
-                    onChange={(e) => updateQuestion(q.id, 'question', e.target.value)}
-                    placeholder="질문 (예: 이번 주 나의 신앙 상태는?)"
+                    onChange={(e) =>
+                      updateQuestion(checkQuestions, setCheckQuestions, q.id, 'question', e.target.value)
+                    }
+                    placeholder="자유롭게 질문을 적어보세요"
                     className="w-full bg-transparent border-b border-faint/50 pb-2 mb-3 text-paper text-sm placeholder:text-faint/60 focus:outline-none focus:border-lamp"
                   />
                   <textarea
                     value={q.answer}
-                    onChange={(e) => updateQuestion(q.id, 'answer', e.target.value)}
+                    onChange={(e) =>
+                      updateQuestion(checkQuestions, setCheckQuestions, q.id, 'answer', e.target.value)
+                    }
                     rows={3}
                     placeholder="답변을 적어주세요"
                     className="w-full bg-night/40 border border-faint/40 rounded-xl p-3 text-paper text-sm placeholder:text-faint/60 focus:outline-none focus:border-lamp resize-none"
@@ -252,6 +340,26 @@ export default function WriteEntry({ dateKey, entry, onSave, onDelete, onClose }
           </div>
         </>
       )}
+    </div>
+  )
+}
+
+function QASection({ label, items, accent = 'lamp' }) {
+  const borderClass = accent === 'sage' ? 'border-sage/40 bg-sage/5' : 'border-lamp/30 bg-lamp/5'
+  const labelClass = accent === 'sage' ? 'text-sage' : 'text-lampSoft'
+  return (
+    <div className="mb-5">
+      <p className={`text-xs mb-2 ${labelClass}`}>{label}</p>
+      <div className="flex flex-col gap-3">
+        {items.map((q, idx) => (
+          <div key={q.id ?? idx} className={`border rounded-xl p-3 ${borderClass}`}>
+            {q.question && <p className="text-paper text-sm font-semibold mb-1">{q.question}</p>}
+            <p className="text-paper text-sm leading-relaxed whitespace-pre-wrap">
+              {q.answer || '-'}
+            </p>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

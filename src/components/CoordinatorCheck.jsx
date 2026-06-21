@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
+import { getDailyPassage } from '../content/unit1'
 
 export default function CoordinatorCheck({ dateKey, entry, onCheck, onClose }) {
+  const passage = getDailyPassage(dateKey)
   const [comment, setComment] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -8,8 +10,19 @@ export default function CoordinatorCheck({ dateKey, entry, onCheck, onClose }) {
     setComment(entry?.comment ?? '')
   }, [dateKey, entry])
 
-  const hasContent = Boolean(entry?.content)
-  const questions = Array.isArray(entry?.checkQuestions) ? entry.checkQuestions : []
+  const passageQA = Array.isArray(entry?.passageQA) ? entry.passageQA : []
+  const groupQA = Array.isArray(entry?.groupQA) ? entry.groupQA : []
+  const checks = Array.isArray(entry?.checkQuestions) ? entry.checkQuestions : []
+  const hasCheckAnswers = checks.some((q) => q.question?.trim() || q.answer?.trim())
+  const hasPassageAnswers = passageQA.some((q) => q.answer?.trim())
+  const hasGroupAnswers = groupQA.some((q) => q.answer?.trim())
+  const hasContent = Boolean(
+    entry?.application?.trim() ||
+    entry?.prayer?.trim() ||
+    hasCheckAnswers ||
+    hasPassageAnswers ||
+    hasGroupAnswers
+  )
 
   const handleToggle = async () => {
     setSaving(true)
@@ -30,33 +43,30 @@ export default function CoordinatorCheck({ dateKey, entry, onCheck, onClose }) {
         <div className="w-10" />
       </div>
 
+      {passage && (
+        <div className="mb-6 border border-lamp/30 rounded-xl p-4 bg-lamp/5">
+          <p className="text-xs text-lampSoft mb-1">{passage.unitTitle}</p>
+          <p className="font-display text-base text-lamp">{passage.title}</p>
+        </div>
+      )}
+
       {!hasContent ? (
         <div className="text-center text-faint py-16">
           <p>아직 작성되지 않았어요.</p>
         </div>
       ) : (
         <>
-          <ReadField label="오늘의 본문" value={entry.passage} />
-          <ReadField label="묵상한 내용" value={entry.content} />
+          {passageQA.length > 0 && <QASection label="묵상 질문" items={passageQA} />}
+
           <ReadField label="적용 / 실천" value={entry.application} />
           <ReadField label="기도제목" value={entry.prayer} />
 
-          {questions.length > 0 && (
-            <div className="mb-5">
-              <p className="text-xs text-lamp mb-2">점검 질문</p>
-              <div className="flex flex-col gap-3">
-                {questions.map((q, idx) => (
-                  <div key={q.id ?? idx} className="border border-lamp/30 rounded-xl p-3 bg-lamp/5">
-                    {q.question && (
-                      <p className="text-lamp text-sm font-semibold mb-1">{q.question}</p>
-                    )}
-                    <p className="text-paper text-sm leading-relaxed whitespace-pre-wrap">
-                      {q.answer || '-'}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
+          {groupQA.length > 0 && (
+            <QASection label="코디네이터(소그룹)와 나눔" items={groupQA} accent="sage" />
+          )}
+
+          {checks.length > 0 && hasCheckAnswers && (
+            <QASection label="추가 점검 질문" items={checks} />
           )}
 
           <div className="mb-5">
@@ -85,6 +95,26 @@ export default function CoordinatorCheck({ dateKey, entry, onCheck, onClose }) {
           </button>
         </>
       )}
+    </div>
+  )
+}
+
+function QASection({ label, items, accent = 'lamp' }) {
+  const borderClass = accent === 'sage' ? 'border-sage/40 bg-sage/5' : 'border-lamp/30 bg-lamp/5'
+  const labelClass = accent === 'sage' ? 'text-sage' : 'text-lampSoft'
+  return (
+    <div className="mb-5">
+      <p className={`text-xs mb-2 ${labelClass}`}>{label}</p>
+      <div className="flex flex-col gap-3">
+        {items.map((q, idx) => (
+          <div key={q.id ?? idx} className={`border rounded-xl p-3 ${borderClass}`}>
+            {q.question && <p className="text-paper text-sm font-semibold mb-1">{q.question}</p>}
+            <p className="text-paper text-sm leading-relaxed whitespace-pre-wrap">
+              {q.answer || '-'}
+            </p>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

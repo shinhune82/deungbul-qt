@@ -43,12 +43,20 @@ export default function CalendarView({ entries, onSelectDate }) {
           const hasCheckAnswers = Array.isArray(entry?.checkQuestions)
             ? entry.checkQuestions.some((q) => q.question?.trim() || q.answer?.trim())
             : false
+          const hasPassageAnswers = Array.isArray(entry?.passageQA)
+            ? entry.passageQA.some((q) => q.answer?.trim())
+            : false
+          const hasGroupAnswers = Array.isArray(entry?.groupQA)
+            ? entry.groupQA.some((q) => q.answer?.trim())
+            : false
           const isWritten = Boolean(
             entry?.passage?.trim() ||
             entry?.content?.trim() ||
             entry?.application?.trim() ||
             entry?.prayer?.trim() ||
-            hasCheckAnswers
+            hasCheckAnswers ||
+            hasPassageAnswers ||
+            hasGroupAnswers
           )
           const isChecked = Boolean(entry?.checked)
           const isToday = key === todayStr

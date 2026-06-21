@@ -1,22 +1,5 @@
 import { useState } from 'react'
 import { useUnits } from '../hooks/useUnits'
-import * as pdfjsLib from 'pdfjs-dist'
-import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
-
-async function extractPdfText(file) {
-  const buf = await file.arrayBuffer()
-  const pdf = await pdfjsLib.getDocument({ data: buf }).promise
-  let fullText = ''
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i)
-    const content = await page.getTextContent()
-    const pageText = content.items.map((it) => it.str).join(' ')
-    fullText += pageText + '\n\n--- (페이지 구분) ---\n\n'
-  }
-  return fullText.trim()
-}
 
 function makeId() {
   return Math.random().toString(36).slice(2, 9)
@@ -126,26 +109,6 @@ function UnitEditor({ unit, onCancel, onSaved, saveUnit }) {
     unit.groupQuestions?.length ? unit.groupQuestions : ['']
   )
   const [saving, setSaving] = useState(false)
-  const [extractedText, setExtractedText] = useState('')
-  const [extracting, setExtracting] = useState(false)
-  const [extractError, setExtractError] = useState('')
-
-  const handlePdfUpload = async (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setExtracting(true)
-    setExtractError('')
-    try {
-      const text = await extractPdfText(file)
-      setExtractedText(text)
-    } catch (err) {
-      console.error(err)
-      setExtractError('PDF를 읽는 데 실패했어요. 파일이 손상되었거나 스캔 이미지일 수 있어요.')
-    } finally {
-      setExtracting(false)
-      e.target.value = ''
-    }
-  }
 
   const updateDay = (idx, field, value) => {
     setDays((prev) => prev.map((d, i) => (i === idx ? { ...d, [field]: value } : d)))
@@ -232,33 +195,6 @@ function UnitEditor({ unit, onCancel, onSaved, saveUnit }) {
           className="bg-night/40 border border-faint/40 rounded-xl px-4 py-3 text-paper"
         />
       </Field>
-
-      {/* PDF 텍스트 추출 도우미 */}
-      <div className="mb-6 border border-lamp/30 rounded-xl p-4 bg-lamp/5">
-        <p className="text-sm text-lamp font-semibold mb-2">📄 PDF에서 텍스트 가져오기</p>
-        <p className="text-xs text-faint mb-3">
-          PDF를 올리면 전체 글자를 추출해요. 자동으로 요일별로 나누진 않으니,
-          아래에 추출된 글자를 보면서 필요한 부분을 복사해 각 요일 칸에 붙여넣어 주세요.
-        </p>
-        <label className="block">
-          <span className="inline-block bg-lamp text-nightDeep text-sm font-semibold px-4 py-2 rounded-xl cursor-pointer">
-            {extracting ? '읽는 중...' : 'PDF 선택'}
-          </span>
-          <input type="file" accept="application/pdf" onChange={handlePdfUpload} className="hidden" />
-        </label>
-        {extractError && <p className="text-xs text-red-300 mt-2">{extractError}</p>}
-        {extractedText && (
-          <div className="mt-3">
-            <p className="text-xs text-faint mb-1">추출된 텍스트 (선택해서 복사하세요)</p>
-            <textarea
-              readOnly
-              value={extractedText}
-              rows={10}
-              className="w-full bg-night/60 border border-faint/40 rounded-xl p-3 text-paper text-xs leading-relaxed resize-y"
-            />
-          </div>
-        )}
-      </div>
 
       {days.map((day, dayIdx) => (
         <div key={dayIdx} className="mb-6 border border-faint/30 rounded-xl p-4">

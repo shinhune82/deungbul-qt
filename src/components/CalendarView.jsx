@@ -100,7 +100,7 @@ export default function CalendarView({ entries, onSelectDate }) {
           }}>
             <span style={{filter:'brightness(0) saturate(100%)'}}>🐇</span>
           </div>
-          <span>달토끼 (확인)</span>
+          <span>코디네이터 확인</span>
         </div>
       </div>
     </div>

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { getDailyPassage } from '../content/unit1'
+import { getDailyPassage } from '../hooks/useUnits'
 
-export default function CoordinatorCheck({ dateKey, entry, onCheck, onClose }) {
-  const passage = getDailyPassage(dateKey)
+export default function CoordinatorCheck({ dateKey, entry, units, onCheck, onClose }) {
+  const passage = getDailyPassage(units ?? [], dateKey)
   const [comment, setComment] = useState('')
   const [saving, setSaving] = useState(false)
 

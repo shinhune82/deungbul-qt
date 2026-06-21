@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
-import { getDailyPassage } from '../content/unit1'
+import { getDailyPassage } from '../hooks/useUnits'
 
 function makeId() {
   return Math.random().toString(36).slice(2, 9)
 }
 
-export default function WriteEntry({ dateKey, entry, onSave, onDelete, onClose }) {
-  const passage = getDailyPassage(dateKey)
+export default function WriteEntry({ dateKey, entry, units, onSave, onDelete, onClose }) {
+  const passage = getDailyPassage(units ?? [], dateKey)
   const [mode, setMode] = useState('view')
   const [showFullBody, setShowFullBody] = useState(false)
 

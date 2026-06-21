@@ -6,7 +6,10 @@ import WriteEntry from './components/WriteEntry'
 import CoordinatorCheck from './components/CoordinatorCheck'
 import NotificationSettings from './components/NotificationSettings'
 import StreakStats from './components/StreakStats'
+import UnitManager from './components/UnitManager'
 import { useEntries, todayKey } from './hooks/useEntries'
+import { useUnits } from './hooks/useUnits'
+import { UNITS as STATIC_UNITS } from './content/unit1'
 import { ensureSignedIn } from './firebase'
 
 const ROLE_KEY = 'qt_role'
@@ -17,9 +20,13 @@ export default function App() {
   const [installDone, setInstallDone] = useState(() => localStorage.getItem(INSTALL_SEEN_KEY) === '1')
   const [tab, setTab] = useState('calendar')
   const [selectedDate, setSelectedDate] = useState(null)
+  const [showUnitManager, setShowUnitManager] = useState(false)
   const [authed, setAuthed] = useState(false)
 
   const { entries, saveEntry, setCheck, deleteEntry } = useEntries()
+  const { units: firestoreUnits } = useUnits()
+  // 기존에 만들어둔 1단원(코드에 내장)은 그대로 두고, 새로 추가하는 단원은 Firestore에서 불러와 합칩니다.
+  const units = [...STATIC_UNITS, ...firestoreUnits]
 
   useEffect(() => {
     ensureSignedIn(() => setAuthed(true))
@@ -43,6 +50,10 @@ export default function App() {
     </div>
   )
 
+  if (showUnitManager) {
+    return <UnitManager onClose={() => setShowUnitManager(false)} />
+  }
+
   return (
     <div className="min-h-screen pb-24">
       {/* 헤더 */}
@@ -57,6 +68,7 @@ export default function App() {
           <WriteEntry
             dateKey={selectedDate}
             entry={entries[selectedDate]}
+            units={units}
             onSave={saveEntry}
             onDelete={deleteEntry}
             onClose={() => setSelectedDate(null)}
@@ -65,6 +77,7 @@ export default function App() {
           <CoordinatorCheck
             dateKey={selectedDate}
             entry={entries[selectedDate]}
+            units={units}
             onCheck={setCheck}
             onClose={() => setSelectedDate(null)}
           />
@@ -73,7 +86,17 @@ export default function App() {
         <>
           {tab === 'calendar' && <CalendarView entries={entries} onSelectDate={setSelectedDate} />}
           {tab === 'stats' && <StreakStats entries={entries} />}
-          {tab === 'settings' && <NotificationSettings role={role} />}
+          {tab === 'settings' && (
+            <div className="px-5 pb-6">
+              <button
+                onClick={() => setShowUnitManager(true)}
+                className="w-full border border-lamp text-lamp font-semibold py-4 rounded-2xl mb-6"
+              >
+                📖 본문 관리 (단원 추가/수정)
+              </button>
+              <NotificationSettings role={role} />
+            </div>
+          )}
         </>
       )}
 

@@ -50,10 +50,6 @@ export default function App() {
     </div>
   )
 
-  if (showUnitManager) {
-    return <UnitManager onClose={() => setShowUnitManager(false)} />
-  }
-
   return (
     <div className="min-h-screen pb-24">
       {/* 헤더 */}
@@ -63,7 +59,9 @@ export default function App() {
       </div>
 
       {/* 메인 콘텐츠 */}
-      {selectedDate ? (
+      {showUnitManager ? (
+        <UnitManager onClose={() => setShowUnitManager(false)} />
+      ) : selectedDate ? (
         role === 'writer' ? (
           <WriteEntry
             dateKey={selectedDate}
@@ -103,25 +101,25 @@ export default function App() {
       {/* 하단 탭바 - 항상 표시 */}
       <div className="fixed bottom-0 left-0 right-0 bg-nightDeep border-t border-faint/20 flex">
         <button
-          onClick={() => { setSelectedDate(null); setTab('calendar') }}
+          onClick={() => { setSelectedDate(null); setShowUnitManager(false); setTab('calendar') }}
           className={`flex-1 py-4 text-sm ${tab === 'calendar' && !selectedDate ? 'text-lamp' : 'text-faint'}`}
         >
           캘린더
         </button>
         <button
-          onClick={() => setSelectedDate(todayKey())}
+          onClick={() => { setShowUnitManager(false); setSelectedDate(todayKey()) }}
           className={`flex-1 py-4 text-sm ${selectedDate === todayKey() ? 'text-lamp' : 'text-faint'}`}
         >
           오늘
         </button>
         <button
-          onClick={() => { setSelectedDate(null); setTab('stats') }}
+          onClick={() => { setSelectedDate(null); setShowUnitManager(false); setTab('stats') }}
           className={`flex-1 py-4 text-sm ${tab === 'stats' && !selectedDate ? 'text-lamp' : 'text-faint'}`}
         >
           등불
         </button>
         <button
-          onClick={() => { setSelectedDate(null); setTab('settings') }}
+          onClick={() => { setSelectedDate(null); setShowUnitManager(false); setTab('settings') }}
           className={`flex-1 py-4 text-sm ${tab === 'settings' && !selectedDate ? 'text-lamp' : 'text-faint'}`}
         >
           설정

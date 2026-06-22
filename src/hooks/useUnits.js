@@ -62,11 +62,20 @@ export function getDailyPassage(units, dateKey) {
     const weekIndex = Math.floor(diffDays / 7)
     const dayInWeek = dow - 1 // 월=0 ... 금=4
     if (weekIndex === 0 && dayInWeek >= 0 && dayInWeek < unit.days.length) {
+      const day = unit.days[dayInWeek]
+      // sections 구조 우선, 없으면 body+reflectionQuestions 방식도 호환
+      const sections = Array.isArray(day.sections)
+        ? day.sections
+        : (day.body
+            ? [{ body: day.body, question: day.reflectionQuestions?.[0] ?? null },
+               ...(day.reflectionQuestions?.slice(1).map(q => ({ body: '', question: q })) ?? [])]
+            : [])
       return {
         unitId: unit.id,
         unitTitle: unit.title,
         dayIndex: dayInWeek,
-        ...unit.days[dayInWeek],
+        title: day.title ?? '',
+        sections,
         groupQuestions: unit.groupQuestions ?? []
       }
     }

@@ -16,7 +16,7 @@ import { ensureSignedIn } from './firebase'
 const ROLE_KEY = 'qt_role'
 const INSTALL_SEEN_KEY = 'qt_install_seen'
 
-function HomeScreen({ onTabSelect, onTodaySelect }) {
+function HomeScreen({ onTabSelect, onTodaySelect, units = [] }) {
   return (
     <div className="flex flex-col min-h-[calc(100vh-6rem)] px-5">
 
@@ -78,7 +78,7 @@ function HomeScreen({ onTabSelect, onTodaySelect }) {
       </div>
 
       {/* 업데이트 내역 */}
-      <UpdateLog units={firestoreUnits} />
+      <UpdateLog units={units} />
 
       {/* 하단 여백 */}
       <div className="h-8" />
@@ -172,7 +172,7 @@ export default function App() {
         )
       ) : (
         <>
-          {tab === 'home'     && <HomeScreen onTabSelect={handleTabSelect} onTodaySelect={handleTodaySelect} />}
+          {tab === 'home'     && <HomeScreen onTabSelect={handleTabSelect} onTodaySelect={handleTodaySelect} units={firestoreUnits}/>}
           {tab === 'calendar' && <CalendarView entries={entries} onSelectDate={setSelectedDate} />}
           {tab === 'stats'    && <StreakStats entries={entries} />}
           {tab === 'settings' && (

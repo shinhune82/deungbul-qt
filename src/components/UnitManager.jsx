@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useUnits } from '../hooks/useUnits'
 
 function makeId() {
@@ -20,8 +20,46 @@ function emptyUnit() {
 
 export default function UnitManager({ onClose }) {
   const { units, saveUnit, deleteUnit } = useUnits()
-  const [editing, setEditing] = useState(null) // null | unit object (편집중)
+  const [editing, setEditing] = useState(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
+  const [importing, setImporting] = useState(false)
+  const [importMsg, setImportMsg] = useState(null)
+  const fileRef = useRef()
+
+  // ── JSON 가져오기 ──────────────────────────────────────
+  const handleImportFile = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImporting(true)
+    setImportMsg(null)
+    try {
+      const text = await file.text()
+      const data = JSON.parse(text)
+
+      // 단일 단원 객체 or 배열 둘 다 허용
+      const list = Array.isArray(data) ? data : [data]
+
+      for (const unit of list) {
+        if (!unit.id || !unit.title || !unit.startDate || !Array.isArray(unit.days)) {
+          throw new Error(`필수 필드(id, title, startDate, days) 누락: ${unit.title || '?'}`)
+        }
+        await saveUnit(unit.id, {
+          title: unit.title,
+          startDate: unit.startDate,
+          days: unit.days,
+          groupQuestions: unit.groupQuestions ?? []
+        })
+      }
+
+      setImportMsg({ ok: true, text: `${list.length}개 단원을 가져왔어요 ✓` })
+    } catch (err) {
+      setImportMsg({ ok: false, text: `오류: ${err.message}` })
+    } finally {
+      setImporting(false)
+      e.target.value = ''
+    }
+  }
+  // ───────────────────────────────────────────────────────
 
   if (editing) {
     return (
@@ -44,16 +82,38 @@ export default function UnitManager({ onClose }) {
 
       <button
         onClick={() => setEditing({ ...emptyUnit(), id: 'unit_' + makeId() })}
-        className="w-full bg-lamp text-nightDeep font-semibold py-4 rounded-2xl shadow-glow mb-6"
+        className="w-full bg-lamp text-nightDeep font-semibold py-4 rounded-2xl shadow-glow mb-3"
       >
         + 새 단원 추가
       </button>
+
+      {/* JSON 가져오기 버튼 */}
+      <button
+        onClick={() => fileRef.current?.click()}
+        disabled={importing}
+        className="w-full border border-lamp text-lamp font-semibold py-4 rounded-2xl mb-2 disabled:opacity-60"
+      >
+        {importing ? '가져오는 중...' : '📂 JSON으로 단원 가져오기'}
+      </button>
+      <input
+        ref={fileRef}
+        type="file"
+        accept=".json"
+        className="hidden"
+        onChange={handleImportFile}
+      />
+
+      {importMsg && (
+        <p className={`text-sm text-center mb-4 ${importMsg.ok ? 'text-lamp' : 'text-red-400'}`}>
+          {importMsg.text}
+        </p>
+      )}
 
       {units.length === 0 && (
         <p className="text-faint text-sm text-center py-8">등록된 단원이 없어요.</p>
       )}
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 mt-3">
         {units.map((unit) => (
           <div key={unit.id} className="border border-faint/30 rounded-xl p-4">
             <p className="text-paper font-semibold mb-1">{unit.title || '(제목 없음)'}</p>

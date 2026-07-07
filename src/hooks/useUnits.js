@@ -47,11 +47,15 @@ export function useUnits() {
 }
 
 // dateKey(YYYY-MM-DD)와 units 배열을 받아 그 날짜의 본문을 찾아 반환.
-// 평일(월~금)만 본문이 있고, 토/일은 null.
+// 평일(월~금): 해당 요일 본문 반환
+// 토요일: 해당 주 단원의 코디네이터 나눔 전용 passage 반환
+// 일요일: null
 export function getDailyPassage(units, dateKey) {
   const date = new Date(dateKey + 'T00:00:00')
-  const dow = date.getDay() // 0=일 ... 6=토
-  if (dow === 0 || dow === 6) return null
+  const dow = date.getDay() // 0=일 1=월 ... 6=토
+
+  // 일요일은 본문 없음
+  if (dow === 0) return null
 
   for (const unit of units) {
     if (!unit.startDate || !Array.isArray(unit.days)) continue
@@ -60,22 +64,32 @@ export function getDailyPassage(units, dateKey) {
     if (diffDays < 0) continue
 
     const weekIndex = Math.floor(diffDays / 7)
+
+    // 토요일: 해당 주 단원의 코디네이터 나눔 passage 반환
+    if (dow === 6) {
+      if (weekIndex === 0) {
+        return {
+          unitId: unit.id,
+          unitTitle: unit.title,
+          dayIndex: -1,
+          isSaturdaySharing: true,
+          title: '코디네이터(소그룹)와의 나눔',
+          sections: [],
+          groupQuestions: unit.groupQuestions ?? []
+        }
+      }
+      continue
+    }
+
+    // 평일(월~금)
     const dayInWeek = dow - 1 // 월=0 ... 금=4
     if (weekIndex === 0 && dayInWeek >= 0 && dayInWeek < unit.days.length) {
-      const day = unit.days[dayInWeek]
-      // sections 구조 우선, 없으면 body+reflectionQuestions 방식도 호환
-      const sections = Array.isArray(day.sections)
-        ? day.sections
-        : (day.body
-            ? [{ body: day.body, question: day.reflectionQuestions?.[0] ?? null },
-               ...(day.reflectionQuestions?.slice(1).map(q => ({ body: '', question: q })) ?? [])]
-            : [])
       return {
         unitId: unit.id,
         unitTitle: unit.title,
         dayIndex: dayInWeek,
-        title: day.title ?? '',
-        sections,
+        isSaturdaySharing: false,
+        ...unit.days[dayInWeek],
         groupQuestions: unit.groupQuestions ?? []
       }
     }

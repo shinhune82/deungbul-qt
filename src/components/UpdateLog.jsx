@@ -2,6 +2,14 @@
 // 새 버전 추가 시 MANUAL_UPDATES 배열 맨 앞에 항목을 추가하세요.
 const MANUAL_UPDATES = [
   {
+    version: 'v1.4',
+    date: '2026-07-12',
+    items: [
+      '뒤로가기 버튼 앱 내부 네비게이션 적용',
+      '3단원 말씀 사건 본문 등록',
+    ],
+  },
+  {
     version: 'v1.3',
     date: '2026-07-04',
     items: [

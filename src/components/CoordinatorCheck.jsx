@@ -93,7 +93,7 @@ export default function CoordinatorCheck({ dateKey, entry, units, onCheck, onClo
                   <p className="text-paper text-sm font-semibold mb-1">{idx + 1}. {q.question}</p>
                   <p className="text-paper text-sm leading-relaxed whitespace-pre-wrap mb-3">{q.answer || '-'}</p>
                   {/* 코디네이터 답변 칸 */}
-                  <p className="text-xs text-lampSoft mb-1">코디네이터 답변</p>
+                  <p className="text-xs text-lampSoft mb-1">코디네이터 나눔</p>
                   <textarea
                     value={coordGroupQA[idx]?.answer ?? ''}
                     onChange={(e) => {
@@ -103,7 +103,7 @@ export default function CoordinatorCheck({ dateKey, entry, units, onCheck, onClo
                     }}
                     onBlur={handleSave}
                     rows={2}
-                    placeholder="코디네이터 답변을 적어주세요"
+                    placeholder="함께 나눈 내용을 적어주세요"
                     className="w-full bg-night/40 border border-faint/40 rounded-xl p-2 text-paper text-sm placeholder:text-faint/60 focus:outline-none focus:border-lamp resize-none"
                   />
                 </div>
@@ -197,7 +197,7 @@ export default function CoordinatorCheck({ dateKey, entry, units, onCheck, onClo
                     }}
                     onBlur={handleSave}
                     rows={2}
-                    placeholder="코디네이터 답변을 적어주세요"
+                    placeholder="함께 나눈 내용을 적어주세요"
                     className="w-full bg-night/40 border border-faint/40 rounded-xl p-2 text-paper text-sm placeholder:text-faint/60 focus:outline-none focus:border-lamp resize-none"
                   />
                 </div>

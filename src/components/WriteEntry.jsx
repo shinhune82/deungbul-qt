@@ -129,7 +129,7 @@ export default function WriteEntry({ dateKey, entry, units, onSave, onDelete, on
                       {/* 코디네이터 답변 — 내용 있을 때만 */}
                       {viewCoordGroupQA[idx]?.answer?.trim() && (
                         <div className="mt-2 pt-2 border-t border-faint/20">
-                          <p className="text-xs text-lampSoft mb-1">코디네이터</p>
+                          <p className="text-xs text-lampSoft mb-1">코디네이터 나눔</p>
                           <p className="text-paper text-sm leading-relaxed whitespace-pre-wrap">
                             {viewCoordGroupQA[idx].answer}
                           </p>
@@ -276,7 +276,7 @@ export default function WriteEntry({ dateKey, entry, units, onSave, onDelete, on
                   {/* 코디네이터 답변 — 내용 있을 때만 표시 */}
                   {viewCoordQA[idx]?.answer?.trim() && (
                     <div className="mt-3 pt-3 border-t border-faint/20">
-                      <p className="text-xs text-lampSoft mb-1">코디네이터</p>
+                      <p className="text-xs text-lampSoft mb-1">코디네이터 나눔</p>
                       <p className="text-paper text-sm leading-relaxed whitespace-pre-wrap">
                         {viewCoordQA[idx].answer}
                       </p>

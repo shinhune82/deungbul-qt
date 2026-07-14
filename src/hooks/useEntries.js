@@ -30,9 +30,7 @@ export function useEntries() {
       q,
       (snap) => {
         const map = {}
-        snap.forEach((d) => {
-          map[d.id] = d.data()
-        })
+        snap.forEach((d) => { map[d.id] = d.data() })
         setEntries(map)
         setLoading(false)
       },
@@ -46,18 +44,10 @@ export function useEntries() {
 
   const saveEntry = useCallback(async (dateKey, fields) => {
     const ref = doc(db, COLLECTION, dateKey)
-    await setDoc(
-      ref,
-      {
-        date: dateKey,
-        ...fields,
-        writtenAt: serverTimestamp()
-      },
-      { merge: true }
-    )
+    await setDoc(ref, { date: dateKey, ...fields, writtenAt: serverTimestamp() }, { merge: true })
   }, [])
 
-  const setCheck = useCallback(async (dateKey, checked, comment) => {
+  const setCheck = useCallback(async (dateKey, checked, comment, coordQA, coordGroupQA) => {
     const ref = doc(db, COLLECTION, dateKey)
     await setDoc(
       ref,
@@ -65,6 +55,8 @@ export function useEntries() {
         date: dateKey,
         checked,
         comment: comment ?? '',
+        coordQA: coordQA ?? [],
+        coordGroupQA: coordGroupQA ?? [],
         checkedAt: serverTimestamp()
       },
       { merge: true }
@@ -72,8 +64,7 @@ export function useEntries() {
   }, [])
 
   const deleteEntry = useCallback(async (dateKey) => {
-    const ref = doc(db, COLLECTION, dateKey)
-    await deleteDoc(ref)
+    await deleteDoc(doc(db, COLLECTION, dateKey))
   }, [])
 
   return { entries, loading, saveEntry, setCheck, deleteEntry }

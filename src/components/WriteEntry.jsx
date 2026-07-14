@@ -5,16 +5,13 @@ function makeId() {
   return Math.random().toString(36).slice(2, 9)
 }
 
-// body+reflectionQuestions 구조 → sections 구조로 변환
 function normalizeSections(day) {
   if (!day) return []
   if (Array.isArray(day.sections) && day.sections.length > 0) return day.sections
   const questions = Array.isArray(day.reflectionQuestions) ? day.reflectionQuestions : []
   const sections = []
   if (day.body) sections.push({ type: 'body', body: day.body, question: null })
-  questions.forEach((q) => {
-    sections.push({ type: 'reflection', body: null, question: q })
-  })
+  questions.forEach((q) => sections.push({ type: 'reflection', body: null, question: q }))
   return sections
 }
 
@@ -30,11 +27,9 @@ export default function WriteEntry({ dateKey, entry, units, onSave, onDelete, on
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const hasSectionAnswers = Array.isArray(entry?.sectionQA)
-    ? entry.sectionQA.some((q) => q.answer?.trim())
-    : false
+    ? entry.sectionQA.some((q) => q.answer?.trim()) : false
   const hasGroupAnswers = Array.isArray(entry?.groupQA)
-    ? entry.groupQA.some((q) => q.answer?.trim())
-    : false
+    ? entry.groupQA.some((q) => q.answer?.trim()) : false
   const hasContent = Boolean(
     hasSectionAnswers || hasGroupAnswers ||
     entry?.groupSummary?.trim() || entry?.groupSharing?.trim()
@@ -54,7 +49,6 @@ export default function WriteEntry({ dateKey, entry, units, onSave, onDelete, on
           answer: savedGroup[idx]?.answer ?? ''
         }))
       )
-
       if (!isSaturday) {
         const rawSections = normalizeSections(passage)
         const saved = Array.isArray(entry?.sectionQA) ? entry.sectionQA : []
@@ -99,6 +93,8 @@ export default function WriteEntry({ dateKey, entry, units, onSave, onDelete, on
   const hasFeedback = entry?.checked || entry?.comment
   const viewSectionQA = Array.isArray(entry?.sectionQA) ? entry.sectionQA : []
   const viewGroupQA = Array.isArray(entry?.groupQA) ? entry.groupQA : []
+  const viewCoordQA = Array.isArray(entry?.coordQA) ? entry.coordQA : []
+  const viewCoordGroupQA = Array.isArray(entry?.coordGroupQA) ? entry.coordGroupQA : []
   const sections = (!isSaturday && passage) ? normalizeSections(passage) : []
 
   // ── 토요일 전용 화면 ───────────────────────────────────────
@@ -111,7 +107,6 @@ export default function WriteEntry({ dateKey, entry, units, onSave, onDelete, on
           <div className="w-10" />
         </div>
 
-        {/* 헤더 */}
         <div className="mb-6 border border-sage/40 rounded-xl px-4 py-3 bg-sage/5">
           <p className="text-xs text-sage mb-0.5">{passage.unitTitle}</p>
           <p className="font-display text-base text-sage">코디네이터(소그룹)와의 나눔</p>
@@ -119,36 +114,41 @@ export default function WriteEntry({ dateKey, entry, units, onSave, onDelete, on
 
         {mode === 'view' ? (
           <>
-            {/* *개인이 생각할 질문 — view */}
             {groupQA.length > 0 && (
               <div className="mb-6">
                 <p className="text-xs text-sage font-semibold mb-1">*개인이 생각할 질문</p>
                 <p className="text-xs text-faint/70 mb-3">
-                  다음의 질문들은 이미 2단원을 공부하면서 생각했던 질문들입니다. 다시 한 번 질문들을 생각하시며 정리해보십시오.
+                  다음의 질문들은 이미 공부하면서 생각했던 질문들입니다. 다시 한 번 질문들을 생각하시며 정리해보십시오.
                 </p>
                 <div className="flex flex-col gap-3">
                   {groupQA.map((q, idx) => (
                     <div key={q.id ?? idx} className="border border-sage/30 rounded-xl p-3 bg-sage/5">
                       <p className="text-paper text-sm font-semibold mb-1">{idx + 1}. {q.question}</p>
-                      <p className="text-paper text-sm leading-relaxed whitespace-pre-wrap">{q.answer || '-'}</p>
+                      {/* 작성자 답변 */}
+                      <p className="text-paper text-sm leading-relaxed whitespace-pre-wrap mb-2">{q.answer || '-'}</p>
+                      {/* 코디네이터 답변 — 내용 있을 때만 */}
+                      {viewCoordGroupQA[idx]?.answer?.trim() && (
+                        <div className="mt-2 pt-2 border-t border-faint/20">
+                          <p className="text-xs text-lampSoft mb-1">코디네이터</p>
+                          <p className="text-paper text-sm leading-relaxed whitespace-pre-wrap">
+                            {viewCoordGroupQA[idx].answer}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* *코디네이터와 나눌 생각 정리하기 — view */}
             <div className="mb-6">
               <p className="text-xs text-sage font-semibold mb-1">*코디네이터(소그룹)와 나눌 생각 정리하기</p>
               <p className="text-xs text-faint/70 mb-3">
                 잠언 1장 1절에서 7절을 읽을 때 다가온 구절(lexio)을 쪽지에 적었을텐데, 그 쪽지묵상 말씀과 함께 몇 번이나 읽으며 묵상했는지, 또한 깨달은 것은 무엇인지를 적고 동시에 내가 대답한 기도(oratio)를 정리하십시오.
               </p>
-              <p className="text-paper text-sm leading-relaxed whitespace-pre-wrap">
-                {entry?.groupSummary || '-'}
-              </p>
+              <p className="text-paper text-sm leading-relaxed whitespace-pre-wrap">{entry?.groupSummary || '-'}</p>
             </div>
 
-            {/* *코디네이터에서 나누기 안내 */}
             <div className="mb-6 border border-sage/20 rounded-xl p-3 bg-sage/5">
               <p className="text-xs text-sage font-semibold mb-1">*코디네이터(소그룹)에서 나누기</p>
               <p className="text-xs text-faint/70">정리된 생각을 코디네이터에게 먼저 얘기하고 나누는 시간을 가지십시오.</p>
@@ -163,9 +163,7 @@ export default function WriteEntry({ dateKey, entry, units, onSave, onDelete, on
               </div>
             )}
 
-            <button onClick={() => setMode('edit')} className="w-full border border-sage text-sage font-semibold py-4 rounded-2xl mb-3">
-              수정하기
-            </button>
+            <button onClick={() => setMode('edit')} className="w-full border border-sage text-sage font-semibold py-4 rounded-2xl mb-3">수정하기</button>
             {!confirmDelete ? (
               <button onClick={handleDelete} className="w-full text-faint text-sm py-2">이 날짜 기록 삭제</button>
             ) : (
@@ -173,21 +171,18 @@ export default function WriteEntry({ dateKey, entry, units, onSave, onDelete, on
                 <p className="text-sm text-paper mb-3">정말 삭제할까요? 되돌릴 수 없어요.</p>
                 <div className="flex gap-2">
                   <button onClick={() => setConfirmDelete(false)} className="flex-1 border border-faint text-faint py-2 rounded-xl text-sm">취소</button>
-                  <button onClick={handleDelete} disabled={saving} className="flex-1 bg-red-400/80 text-nightDeep py-2 rounded-xl text-sm font-semibold disabled:opacity-60">
-                    {saving ? '삭제 중...' : '삭제하기'}
-                  </button>
+                  <button onClick={handleDelete} disabled={saving} className="flex-1 bg-red-400/80 text-nightDeep py-2 rounded-xl text-sm font-semibold disabled:opacity-60">{saving ? '삭제 중...' : '삭제하기'}</button>
                 </div>
               </div>
             )}
           </>
         ) : (
           <>
-            {/* *개인이 생각할 질문 — edit */}
             {groupQA.length > 0 && (
               <div className="mb-6">
                 <p className="text-xs text-sage font-semibold mb-1">*개인이 생각할 질문</p>
                 <p className="text-xs text-faint/70 mb-3">
-                  다음의 질문들은 이미 2단원을 공부하면서 생각했던 질문들입니다. 다시 한 번 질문들을 생각하시며 정리해보십시오.
+                  다음의 질문들은 이미 공부하면서 생각했던 질문들입니다. 다시 한 번 질문들을 생각하시며 정리해보십시오.
                 </p>
                 <div className="flex flex-col gap-3">
                   {groupQA.map((q, idx) => (
@@ -210,7 +205,6 @@ export default function WriteEntry({ dateKey, entry, units, onSave, onDelete, on
               </div>
             )}
 
-            {/* *코디네이터와 나눌 생각 정리하기 — edit */}
             <div className="mb-6 border border-sage/40 rounded-xl p-4 bg-sage/5">
               <p className="text-xs text-sage font-semibold mb-1">*코디네이터(소그룹)와 나눌 생각 정리하기</p>
               <p className="text-xs text-faint/70 mb-3">
@@ -225,16 +219,13 @@ export default function WriteEntry({ dateKey, entry, units, onSave, onDelete, on
               />
             </div>
 
-            {/* *코디네이터에서 나누기 안내 */}
             <div className="mb-6 border border-sage/20 rounded-xl p-3 bg-sage/5">
               <p className="text-xs text-sage font-semibold mb-1">*코디네이터(소그룹)에서 나누기</p>
               <p className="text-xs text-faint/70">정리된 생각을 코디네이터에게 먼저 얘기하고 나누는 시간을 가지십시오.</p>
             </div>
 
             <div className="flex gap-3">
-              {hasContent && (
-                <button onClick={() => setMode('view')} className="flex-1 border border-faint text-faint font-semibold py-4 rounded-2xl">취소</button>
-              )}
+              {hasContent && <button onClick={() => setMode('view')} className="flex-1 border border-faint text-faint font-semibold py-4 rounded-2xl">취소</button>}
               <button onClick={handleSave} disabled={saving} className="flex-1 bg-lamp text-nightDeep font-semibold py-4 rounded-2xl shadow-glow disabled:opacity-60">
                 {saving ? '저장 중...' : '저장하기'}
               </button>
@@ -245,7 +236,7 @@ export default function WriteEntry({ dateKey, entry, units, onSave, onDelete, on
     )
   }
 
-  // ── 평일 화면 (기존과 동일) ────────────────────────────────
+  // ── 평일 화면 ────────────────────────────────────────────
   return (
     <div className="px-5 pb-10">
       <div className="flex items-center justify-between mb-5 pt-6">
@@ -278,9 +269,19 @@ export default function WriteEntry({ dateKey, entry, units, onSave, onDelete, on
                 <div className="mb-5 border border-faint/40 rounded-xl p-3">
                   <p className="text-xs text-lampSoft mb-1">묵상 질문</p>
                   <p className="text-paper text-sm font-semibold mb-2">{section.question}</p>
+                  {/* 작성자 답변 */}
                   <p className="text-paper text-sm leading-relaxed whitespace-pre-wrap">
                     {viewSectionQA[idx]?.answer || '-'}
                   </p>
+                  {/* 코디네이터 답변 — 내용 있을 때만 표시 */}
+                  {viewCoordQA[idx]?.answer?.trim() && (
+                    <div className="mt-3 pt-3 border-t border-faint/20">
+                      <p className="text-xs text-lampSoft mb-1">코디네이터</p>
+                      <p className="text-paper text-sm leading-relaxed whitespace-pre-wrap">
+                        {viewCoordQA[idx].answer}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -295,9 +296,7 @@ export default function WriteEntry({ dateKey, entry, units, onSave, onDelete, on
             </div>
           )}
 
-          <button onClick={() => setMode('edit')} className="w-full border border-lamp text-lamp font-semibold py-4 rounded-2xl mb-3">
-            수정하기
-          </button>
+          <button onClick={() => setMode('edit')} className="w-full border border-lamp text-lamp font-semibold py-4 rounded-2xl mb-3">수정하기</button>
           {!confirmDelete ? (
             <button onClick={handleDelete} className="w-full text-faint text-sm py-2">이 날짜 기록 삭제</button>
           ) : (
@@ -305,9 +304,7 @@ export default function WriteEntry({ dateKey, entry, units, onSave, onDelete, on
               <p className="text-sm text-paper mb-3">정말 삭제할까요? 되돌릴 수 없어요.</p>
               <div className="flex gap-2">
                 <button onClick={() => setConfirmDelete(false)} className="flex-1 border border-faint text-faint py-2 rounded-xl text-sm">취소</button>
-                <button onClick={handleDelete} disabled={saving} className="flex-1 bg-red-400/80 text-nightDeep py-2 rounded-xl text-sm font-semibold disabled:opacity-60">
-                  {saving ? '삭제 중...' : '삭제하기'}
-                </button>
+                <button onClick={handleDelete} disabled={saving} className="flex-1 bg-red-400/80 text-nightDeep py-2 rounded-xl text-sm font-semibold disabled:opacity-60">{saving ? '삭제 중...' : '삭제하기'}</button>
               </div>
             </div>
           )}
@@ -342,9 +339,7 @@ export default function WriteEntry({ dateKey, entry, units, onSave, onDelete, on
           ))}
 
           <div className="flex gap-3">
-            {hasContent && (
-              <button onClick={() => setMode('view')} className="flex-1 border border-faint text-faint font-semibold py-4 rounded-2xl">취소</button>
-            )}
+            {hasContent && <button onClick={() => setMode('view')} className="flex-1 border border-faint text-faint font-semibold py-4 rounded-2xl">취소</button>}
             <button onClick={handleSave} disabled={saving} className="flex-1 bg-lamp text-nightDeep font-semibold py-4 rounded-2xl shadow-glow disabled:opacity-60">
               {saving ? '저장 중...' : '저장하기'}
             </button>
